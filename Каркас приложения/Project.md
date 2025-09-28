@@ -2,51 +2,51 @@ using System;
 
 public class File
 {
-    private string _path;
-    private string _extension;
+    private string path;
+    private string extension;
 
     public File()
     {
-        _path = null;
-        _extension = null;
+        path = null;
+        extension = null;
     }
 
     public void SetFile(string path, string extension)
     {
-        _path = path;
-        _extension = extension;
+        this.path = path;
+        this.extension = extension;
     }
 
     public string GetFilePath()
     {
-        if (_path == null || _extension == null)
+        if (path == null || extension == null)
         {
             return null;
         }
-        return _path + _extension;
+        return path + extension;
     }
 }
 
 public class OpeningFile : File
 {
-    private bool _open;
+    private bool open;
     public string Text { get; set; }
 
     public OpeningFile()
     {
-        _open = false;
+        open = false;
         Text = "";
     }
 
     public void OpenFile()
     {
-        _open = true;
+        open = true;
         Console.WriteLine($"Файл {GetFilePath()} открыт");
     }
 
     public bool GetStatusOpen()
     {
-        return _open;
+        return open;
     }
 }
 
@@ -77,6 +77,7 @@ public class EditingFile : OpeningFile
         if (GetStatusOpen())
         {
             CopyText = text;
+            Console.WriteLine($"Скопирован текст: {text}");
         }
         else
         {
@@ -97,23 +98,23 @@ public class EditingFile : OpeningFile
     }
 }
 
-public class FormattingStyles : OpeningFile
+public class FormattingStyles : EditingFile
 {
-    private int _fontSize;
-    private string _fontStyle;
+    private int fontSize;
+    private string fontStyle;
 
     public FormattingStyles()
     {
-        _fontSize = 14;
-        _fontStyle = "TimesNewRoman";
+        fontSize = 14;
+        fontStyle = "TimesNewRoman";
     }
 
     public void SetSize(int fontSize)
     {
         if (GetStatusOpen())
         {
-            _fontSize = fontSize;
-            Console.WriteLine($"Размер шрифта установлен: {_fontSize}");
+            this.fontSize = fontSize;
+            Console.WriteLine($"Размер шрифта установлен: {fontSize}");
         }
         else
         {
@@ -125,8 +126,8 @@ public class FormattingStyles : OpeningFile
     {
         if (GetStatusOpen())
         {
-            _fontStyle = fontStyle;
-            Console.WriteLine($"Стиль шрифта установлен: {_fontStyle}");
+            this.fontStyle = fontStyle;
+            Console.WriteLine($"Стиль шрифта установлен: {fontStyle}");
         }
         else
         {
@@ -135,7 +136,7 @@ public class FormattingStyles : OpeningFile
     }
 }
 
-public class AdditionalTools : OpeningFile
+public class AdditionalTools : FormattingStyles
 {
     public string SearchText(string text)
     {
@@ -167,7 +168,7 @@ public class AdditionalTools : OpeningFile
     }
 }
 
-public class Printer : OpeningFile
+public class Printer : AdditionalTools
 {
     public void PrintDocument()
     {
@@ -182,7 +183,7 @@ public class Printer : OpeningFile
     }
 }
 
-public class SavingFile : EditingFile
+public class SavingFile : Printer
 {
     public void SaveFile()
     {
