@@ -1,0 +1,189 @@
+# Диаграмма классов
+```mermaid
+classDiagram
+    %% УРОВЕНЬ 1: АБСТРАКЦИИ
+    class IComponent {
+        <<interface>>
+        +Action() void
+    }
+
+    class IExportable {
+        <<interface>>
+        +Export(path: string) void
+        +GetContent() string
+    }
+
+    %% УРОВЕНЬ 2: КОМПОНОВЩИК
+    class DocumentComponent {
+        -List~IComponent~ components
+        +Add(component: IComponent) void
+        +Remove(component: IComponent) void
+        +Action() void
+    }
+
+    class ParagraphComponent {
+        -List~IComponent~ components
+        +Add(component: IComponent) void
+        +Remove(component: IComponent) void
+        +Action() void
+    }
+
+    class SentenceComponent {
+        -List~IComponent~ components
+        +Add(component: IComponent) void
+        +Remove(component: IComponent) void
+        +Action() void
+    }
+
+    class WordComponent {
+        -List~IComponent~ components
+        +Add(component: IComponent) void
+        +Remove(component: IComponent) void
+        +Action() void
+    }
+
+    class LetterComponent {
+        +char Value
+        +Action() void
+    }
+
+    IComponent <|-- DocumentComponent
+    IComponent <|-- ParagraphComponent
+    IComponent <|-- SentenceComponent
+    IComponent <|-- WordComponent
+    IComponent <|-- LetterComponent
+
+    DocumentComponent *-- ParagraphComponent : "состоит из"
+    ParagraphComponent *-- SentenceComponent : "состоит из"
+    SentenceComponent *-- WordComponent : "состоит из"
+    WordComponent *-- LetterComponent : "состоит из"
+
+    %% УРОВЕНЬ 3: ДОКУМЕНТЫ И АДАПТЕРЫ
+    class Document {
+        -string Name
+        -string Path
+        -DocxDocument baseDoc
+        +Load(path: string) void
+        +ExportAs(adapter: IExportable, path: string) void
+        +GetText() string
+    }
+
+    class DocxDocument {
+        -List~Character~ characters
+        +inputText(char: string) void
+        +insertText(character: Character) void
+        +deleteText(character: Character) void
+        +copyText(start: int, end: int) string
+        +pasteText(text: string, cursor: Cursor) void
+        +Export(path: string) void
+        +GetContent() string
+    }
+
+    class PdfAdapter {
+        -DocxDocument doc
+        +PdfAdapter(doc: DocxDocument)
+        +Export(path: string) void
+        +GetContent() string
+    }
+
+    class JsonAdapter {
+        -DocxDocument doc
+        +JsonAdapter(doc: DocxDocument)
+        +Export(path: string) void
+        +GetContent() string
+    }
+
+    class Cursor {
+        -int __position
+        +getPosition() int
+        +setPosition(position: int) void
+        +move(offset: int) void
+    }
+
+    class Character {
+        -char __text
+        -int __position
+        +getText() char
+        +getPosition() int
+        +setPosition(position: int) void
+    }
+
+    IExportable <|.. DocxDocument
+    IExportable <|.. PdfAdapter
+    IExportable <|.. JsonAdapter
+
+    PdfAdapter --> DocxDocument : "оборачивает (адаптер)"
+    JsonAdapter --> DocxDocument : "оборачивает (адаптер)"
+    Document --> DocxDocument : "основной формат хранения"
+    DocxDocument --> Character : "содержит"
+    DocxDocument --> Cursor : "использует"
+
+    %% УРОВЕНЬ 4: СИНТАКСИС
+    class SyntaxHighlighter {
+        +Highlight(content: string, format: string) List~HighlightToken~
+        +ApplyTo(component: IComponent) void
+    }
+
+    class HighlightToken {
+        +int Start
+        +int Length
+        +string Type
+        +ToString() string
+    }
+
+    SyntaxHighlighter --> HighlightToken : "создаёт"
+    SyntaxHighlighter ..> DocumentComponent : "анализирует (зависимость)"
+    SyntaxHighlighter ..> IComponent : "рекурсивно применяет"
+
+    %% УРОВЕНЬ 5: ПОИСК
+    class SearchManager {
+        -List~SearchResult~ ListResult
+        +findWord(doc: Document, word: string) List~SearchResult~
+    }
+
+    class SearchResult {
+        +int start_position
+        +int end_position
+        +string result
+    }
+
+    SearchManager --> SearchResult : "создаёт"
+
+    %% УРОВЕНЬ 6: ПЕЧАТЬ
+    class PrintSettings {
+        +string PrinterName
+        +int Copies
+        +string PageRange
+        +bool Duplex
+        +string Orientation
+    }
+
+    class PrintPreview {
+        +GeneratePreview(doc: Document, settings: PrintSettings) Image
+    }
+
+    class PrintManager {
+        +Print(doc: Document, settings: PrintSettings) void
+        +ShowPreview(doc: Document, settings: PrintSettings) PrintPreview
+    }
+
+    PrintManager --> PrintSettings : "использует"
+    PrintManager *-- PrintPreview : "создаёт (композиция)"
+
+    %% УРОВЕНЬ 7: РЕДАКТОР
+    class Editor {
+        -Document CurrentDocument
+        -SyntaxHighlighter highlighter
+        -PrintManager printManager
+        -SearchManager searchEngine
+        +NewDocument() void
+        +HighlightSyntax() List~HighlightToken~
+        +ExportCurrent(format: string, path: string) void
+        +SearchText(text: string) void
+        +SetText(text: string) void
+    }
+
+    Editor --> Document : "работает с"
+    Editor --> SyntaxHighlighter : "использует"
+    Editor --> PrintManager : "печатает через"
+    Editor --> SearchManager : "использует"
