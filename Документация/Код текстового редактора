@@ -1,0 +1,82 @@
+```
+class ICompanent():
+    def gettext(self):
+        '''
+        Метод, возвращающий текст компонента.
+        Определён для каждого компонента
+        '''
+
+class WordComponent(ICompanent):
+    def __init__(self, word : str):
+        self.content = word
+        self.color = 'black'
+    
+    def gettext(self):
+        return self.content
+
+
+class SentenceComponent(ICompanent):
+    def __init__(self):
+        self.content = [] 
+    
+    def add(self, text):
+        list_word = text.split()
+        for word in list_word:
+            self.content.append(WordComponent(word))
+
+    def gettext(self):
+        text = [i.gettext() for i in self.content]
+        return ' '.join(text)
+
+
+class ParagraphComponent(ICompanent):
+    def __init__(self):
+        self.content = []
+    
+    def add(self, text):
+        text = text.replace('.', '.<sen>')
+        text = text.replace('!', '!<sen>')
+        text = text.replace('?', '?<sen>')
+        list_sentence = text.split('<sen>')
+        for sentence in list_sentence:
+            if sentence:
+                sentence_obj = SentenceComponent()
+                sentence_obj.add(sentence)
+                self.content.append(sentence_obj)
+        
+    def gettext(self):
+        text = [i.gettext() for i in self.content]
+        return ' '.join(text)
+
+
+class Document:
+    def __init__(self, file_name, path):
+        self.name = file_name
+        self.path = path
+        self.content = []
+    
+    def inserttext(self, text):
+        if '\n' in text or len(self.content) == 0:
+            list_paragraph = text.split('\n')
+            for paragraph in list_paragraph[1:]:
+                paragraph_obj = ParagraphComponent()
+                paragraph_obj.add(paragraph)
+                self.content.append(paragraph_obj)
+        else:
+            paragraph_obj = self.content[-1]
+            paragraph_obj.add(text)
+    
+    def gettext(self):
+        text = [i.gettext() for i in self.content]
+        return '\n'.join(text) # Возваращает текст - строку
+        #return self.content # Возваращет не текст, а компоненты
+        
+
+
+document = Document('practica', 'txt')
+document.inserttext('\nБелеет парус одинокий\
+                    \nВ тумане моря голубом!\
+                    \nЧто ищет он в стране далекой?\
+                    \nЧто кинул он в краю родном?')
+print(document.gettext())
+```
