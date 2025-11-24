@@ -1,5 +1,6 @@
 import abc
 import re
+import json
 
 
 class IComponent(abc.ABC):
@@ -22,6 +23,14 @@ class IHighlighter(abc.ABC):
     @abc.abstractmethod
     def highlight(self, document):
         """Применяет подсветку к переданному документу."""
+        pass
+
+
+class IExportStrategy(abc.ABC):
+    """Интерфейс для стратегий экспорта."""
+
+    @abc.abstractmethod
+    def export(self, doc, path: str):
         pass
 
 
@@ -172,6 +181,67 @@ class Document:
         print("------------------------------\n")
 
 
+class PdfExportStrategy(IExportStrategy):
+    def export(self, doc: Document, path: str):
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(f"%PDF-1.4 HEADER\nTitle: {doc.name}\n\n")
+                f.write(doc.gettext())
+            print(f"Экспорт в PDF завершен: {path}")
+        except Exception as e:
+            print(f"Ошибка экспорта: {e}")
+
+
+class JsonExportStrategy(IExportStrategy):
+    def export(self, doc: Document, path: str):
+        data = {
+            "document": doc.name,
+            "content": []
+        }
+        # Сериализация структуры Composite
+        for p_idx, para in enumerate(doc.get_components()):
+            para_data = {"paragraph_id": p_idx, "sentences": []}
+            for s_idx, sent in enumerate(para.get_components()):
+                sent_data = {"sentence_id": s_idx, "words": []}
+                for word in sent.get_components():
+                    sent_data["words"].append({
+                        "text": word.gettext(),
+                        "color": word.color,
+                        "back_color": word.back_color
+                    })
+                para_data["sentences"].append(sent_data)
+            data["content"].append(para_data)
+
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            print(f"✅ Экспорт в JSON завершен: {path}")
+        except Exception as e:
+            print(f"❌ Ошибка экспорта: {e}")
+
+
+class ExportStrategyFabric:
+    def create_strategy(self, format_str: str) -> IExportStrategy:
+        fmt = format_str.lower()
+        if fmt == "pdf":
+            return PdfExportStrategy()
+        elif fmt == "json":
+            return JsonExportStrategy()
+        else:
+            raise ValueError("Неизвестный формат")
+
+
+class ExportManager:
+    def export(self, strategy: IExportStrategy, doc: Document):
+        # Генерируем имя файла
+        ext = "txt"
+        if isinstance(strategy, PdfExportStrategy): ext = "pdf"
+        elif isinstance(strategy, JsonExportStrategy): ext = "json"
+        
+        full_path = f"{doc.name}_export.{ext}"
+        strategy.export(doc, full_path)
+
+
 class SearchHighlighter(IHighlighter):
     """
     Стратегия поиска, реализованная через паттерн Visitor.
@@ -280,6 +350,8 @@ class Editor:
 
     def __init__(self):
         self.document = None
+        self.export_fabric = ExportStrategyFabric()
+        self.export_manager = ExportManager()
 
     def new_document(self, name, path):
         """Создает новый документ."""
@@ -307,6 +379,17 @@ class Editor:
         highlighter.highlight(self.document)
         self.document.view_text()
 
+    def export(self, format_str):
+        if not self.document:
+            print("Ошибка: Нет документа.")
+            return
+        
+        try:
+            strategy = self.export_fabric.create_strategy(format_str)
+            self.export_manager.export(strategy, self.document)
+        except ValueError as e:
+            print(f"Ошибка: {e}")
+
 
 if __name__ == "__main__":
     session = Editor()
@@ -331,6 +414,7 @@ if __name__ == "__main__":
         print("3 - [Найти] и подсветить")
         print("4 - [Показать] содержимое")
         print("5 - Применить стратегию подсветки")
+        print("6 - Экспорт (PDF/JSON)")
         print("0 - [Выход]")
         print("-" * 30)
 
@@ -366,6 +450,10 @@ if __name__ == "__main__":
                     session.get_content()
             except ValueError:
                 print("Ошибка ввода.")
+        
+        elif command == "6":
+            fmt = input("Формат (pdf/json): ")
+            session.export(fmt)
 
         elif command == "0":
             print("Выход.")
