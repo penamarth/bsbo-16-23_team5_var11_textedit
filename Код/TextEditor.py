@@ -183,13 +183,7 @@ class Document:
 
 class PdfExportStrategy(IExportStrategy):
     def export(self, doc: Document, path: str):
-        try:
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(f"%PDF-1.4 HEADER\nTitle: {doc.name}\n\n")
-                f.write(doc.gettext())
-            print(f"Экспорт в PDF завершен: {path}")
-        except Exception as e:
-            print(f"Ошибка экспорта: {e}")
+        print(f"✅ Экспорт в PDF завершен. Имитация создания файла: {path}")
 
 
 class JsonExportStrategy(IExportStrategy):
@@ -198,7 +192,7 @@ class JsonExportStrategy(IExportStrategy):
             "document": doc.name,
             "content": []
         }
-        # Сериализация структуры Composite
+        # Имитация сериализации структуры Composite (логика оставлена для демонстрации)
         for p_idx, para in enumerate(doc.get_components()):
             para_data = {"paragraph_id": p_idx, "sentences": []}
             for s_idx, sent in enumerate(para.get_components()):
@@ -211,13 +205,9 @@ class JsonExportStrategy(IExportStrategy):
                     })
                 para_data["sentences"].append(sent_data)
             data["content"].append(para_data)
-
-        try:
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            print(f"✅ Экспорт в JSON завершен: {path}")
-        except Exception as e:
-            print(f"❌ Ошибка экспорта: {e}")
+        
+        # Имитация сохранения файла
+        print(f"✅ Экспорт в JSON завершен. Имитация создания файла: {path}")
 
 
 class ExportStrategyFabric:
