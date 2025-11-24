@@ -1,4 +1,3 @@
-```
 class ICompanent():
     def gettext(self):
         '''
@@ -27,6 +26,7 @@ class SentenceComponent(ICompanent):
     def gettext(self):
         text = [i.gettext() for i in self.content]
         return ' '.join(text)
+        # return text
 
 
 class ParagraphComponent(ICompanent):
@@ -39,7 +39,7 @@ class ParagraphComponent(ICompanent):
         text = text.replace('?', '?<sen>')
         list_sentence = text.split('<sen>')
         for sentence in list_sentence:
-            if sentence:
+            if sentence != ' ':
                 sentence_obj = SentenceComponent()
                 sentence_obj.add(sentence)
                 self.content.append(sentence_obj)
@@ -47,6 +47,7 @@ class ParagraphComponent(ICompanent):
     def gettext(self):
         text = [i.gettext() for i in self.content]
         return ' '.join(text)
+        # return text
 
 
 class Document:
@@ -56,27 +57,75 @@ class Document:
         self.content = []
     
     def inserttext(self, text):
-        if '\n' in text or len(self.content) == 0:
-            list_paragraph = text.split('\n')
-            for paragraph in list_paragraph[1:]:
-                paragraph_obj = ParagraphComponent()
-                paragraph_obj.add(paragraph)
-                self.content.append(paragraph_obj)
+        parts = text.split('<p>')
+        first = parts[0]
+        if not self.content:
+            para = ParagraphComponent()
+            para.add(first)
+            self.content.append(para)
         else:
-            paragraph_obj = self.content[-1]
-            paragraph_obj.add(text)
+            self.content[-1].add(first)
+
+        for part in parts[1:]:
+            para = ParagraphComponent()
+            para.add(part)
+            self.content.append(para)
+        
     
     def gettext(self):
         text = [i.gettext() for i in self.content]
         return '\n'.join(text) # Возваращает текст - строку
-        #return self.content # Возваращет не текст, а компоненты
+    
+    def getcomponent(self):
+        return self.content # Возваращет не текст, а компоненты
+    
+    def viewtext(self):
+        if len(self.content) > 0:
+            all_paragraph = list(map(lambda x: x.gettext(), self.content))
+            max_line = max(map(lambda x: len(x), all_paragraph))
+            print('-' * (max_line + 4))
+            for paragraph in all_paragraph:
+                print(f"| {paragraph.ljust(max_line)} |", end='\n')
+            print('-' * (max_line + 4))
+
+
+class Editor:
+    def __init__(self):
+        self.document = None
+    
+    def newDocument(self, name, path):
+        self.document = Document(name, path)
+    
+    def insertText(self, text):
+        self.document.inserttext(text)
+
+    def getContent(self):   
+        self.document.viewtext()
         
-
-
-document = Document('practica', 'txt')
-document.inserttext('\nБелеет парус одинокий\
-                    \nВ тумане моря голубом!\
-                    \nЧто ищет он в стране далекой?\
-                    \nЧто кинул он в краю родном?')
-print(document.gettext())
-```
+    
+session = Editor()
+print('Для создания документа укажите название и расширение')
+print('Название : ', end='')
+name = input()
+print('Расширение : ', end='')
+path = input()
+session.newDocument(name, path)
+while True:
+    print(f'\n{session.document.name}.{session.document.path}')
+    session.getContent()
+    print('\nВыберите команду и введите соответствующую цифру')
+    print('1 - Вставить текст')
+    print('Команда :', end=' ')
+    number = input()
+    match number:
+        case '1':
+            print('Введите текст :')
+            session.insertText(input())
+# session.newDocument('Практика', 'txt')
+# session.insertText('Привет, Мир!')
+# session.getContent()
+# session.insertText('<p>Я снова с вами!')
+# session.getContent()
+# session.insertText('Рад сообщить вам эту новость!\
+#                    <p>Буду ждать встречи с вами!')
+# session.getContent()
