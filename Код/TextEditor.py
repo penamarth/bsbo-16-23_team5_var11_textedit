@@ -1,4 +1,5 @@
 import abc
+import re
 
 
 class IComponent(abc.ABC):
@@ -8,6 +9,9 @@ class IComponent(abc.ABC):
     def gettext(self):
         """Возвращает текстовое содержимое компонента."""
         pass
+    
+    @abc.abstractmethod
+    def highlight(self, visitor): pass
 
 
 class IHighlighter(abc.ABC):
@@ -26,6 +30,9 @@ class WordComponent(IComponent):
         self.content = word
         self.color = "black"
         self.back_color = None
+
+    def highlight(self, visitor):
+        visitor.visit_leaf(self)
 
     def gettext(self):
         """Возвращает слово."""
@@ -64,6 +71,10 @@ class SentenceComponent(IComponent):
     def get_components(self):
         """Возвращает список компонентов-слов."""
         return self.content
+    
+    def highlight(self, visitor):
+        for child in self.content:
+            child.highlight(visitor)
 
 
 class ParagraphComponent(IComponent):
@@ -93,6 +104,10 @@ class ParagraphComponent(IComponent):
         """Возвращает список компонентов-предложений."""
         return self.content
 
+    def highlight(self, visitor):
+        for child in self.content:
+            child.highlight(visitor)
+
 
 class Document:
     """Главный класс документа, хранящий структуру абзацев."""
@@ -100,7 +115,7 @@ class Document:
     def __init__(self, file_name, path):
         self.name = file_name
         self.path = path
-        self.content = []
+        self.content: list[ParagraphComponent] = []
 
     def insert_text(self, text):
         """Вставляет текст в документ, разбивая его на абзацы."""
@@ -129,6 +144,10 @@ class Document:
             for sentence in paragraph.get_components():
                 for word in sentence.get_components():
                     word.set_back_color(None)
+    
+    def highlight(self, visitor):
+        for child in self.content:
+            child.highlight(visitor)
 
     def view_text(self):
         """Отображает документ в консоли с учетом цветов текста и фона."""
@@ -241,8 +260,56 @@ class Editor:
         self.document.view_text()
 
 
+class IHighlightStrategy(abc.ABC):
+    COUNT: int = 0
+    def __init__(self, pattern, color, pattern_name = f'Pattern_{COUNT}'):
+        self.pattern_name = pattern_name
+        if pattern_name.startswith('Pattern_') and pattern_name[:-1].isdigit():
+            IHighlightStrategy.COUNT += 1
+        self.pattern = pattern
+        self.color = color
+
+    @abc.abstractmethod
+    def apply(self, leaf): pass
+
+class HighlightStrategy(IHighlightStrategy):
+    def apply(self, leaf):
+        if re.search(self.pattern, leaf.content):
+            leaf.color = self.color
+        return leaf
+        
+class HighlighterVisitor:
+    def __init__(self):
+        self.strategies: list[HighlightStrategy] = []
+        self.selected_strategy: HighlightStrategy = None
+
+    def show_strategies(self):
+        """Показать доступные стратегии подсветки"""
+        for idx, strategy in enumerate(self.strategies, start=1):
+            print(f"{idx}) Паттерн: {strategy.pattern_name}")
+    
+    def select_strategy(self, index: int):
+        """Выбрать стратегию подсветки по индексу"""
+        if 1 <= index <= len(self.strategies):
+            self.selected_strategy = self.strategies[index-1]
+        else:
+            print("Ошибка: Неверный индекс стратегии.")
+            return False
+            
+        return True
+    
+    def add_strategy(self, strategy):
+        """Добавить стратегию подсветки"""
+        self.strategies.append(strategy)
+
+    def visit_leaf(self, leaf):
+        leaf: IComponent = self.selected_strategy.apply(leaf)
+
 if __name__ == "__main__":
     session = Editor()
+    highligher_visitor = HighlighterVisitor()
+    highligher_visitor.add_strategy(HighlightStrategy(r'\bdef\b', 'blue', 'Function Definition'))
+    highligher_visitor.add_strategy(HighlightStrategy(r'\bclass\b', 'green', 'Class Definition'))
 
     print("Текстовый редактор запущен.")
 
@@ -255,6 +322,7 @@ if __name__ == "__main__":
         print("2 - [Вставить] текст")
         print("3 - [Найти] и подсветить")
         print("4 - [Показать] содержимое")
+        print('5 - Применить стратегию подсветки')
         print("0 - [Выход]")
         print("-" * 30)
 
@@ -280,6 +348,14 @@ if __name__ == "__main__":
 
         elif command == "4":
             session.get_content()
+        
+        elif command == "5":
+            highligher_visitor.show_strategies()
+            idx = int(input("Ваш выбор > "))
+            if highligher_visitor.select_strategy(idx):
+                session.document.highlight(highligher_visitor)
+                session.get_content()
+
 
         elif command == "0":
             print("Выход.")
