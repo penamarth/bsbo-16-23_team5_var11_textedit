@@ -366,8 +366,12 @@ class Printer:
         print(f"[Printer] Параметры: {settings.copies} копий, дуплекс={settings.duplex}, ориентация={settings.orientation}")
         print("[Printer] ✅ Документ успешно отправлен на печать!")
 
-from .print_preview import PrintPreview
-from .printer import Printer
+class PrintPreview:
+    """Предпросмотр печати."""
+
+    def generate_preview(self, doc: Document, settings: dict):
+        print(f"📄 Предпросмотр документа: {doc.name}")
+        doc.view_text()
 
 class PrintManager:
     def show_preview(self, document):
