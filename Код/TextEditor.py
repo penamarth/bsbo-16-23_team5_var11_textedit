@@ -350,13 +350,32 @@ class ExportManager:
 # ============================================================
 #                         PRINT (заглушки)
 # ============================================================
+class PrintSettings:
+    def __init__(self, printer_name: str, copies: int = 1, page_range: str = "all", duplex: bool = False, orientation: str = "portrait"):
+        self.printer_name = printer_name
+        self.copies = copies
+        self.page_range = page_range
+        self.duplex = duplex
+        self.orientation = orientation
+        print(f"[PrintSettings] Настройки: принтер={printer_name}, копий={copies}, страницы={page_range}")
+        
+class Printer:
+    def send_to_print(self, document, settings):
+        """Имитация печати"""
+        print(f"[Printer] Отправка на печать: '{document.name}' → {settings.printer_name}")
+        print(f"[Printer] Параметры: {settings.copies} копий, дуплекс={settings.duplex}, ориентация={settings.orientation}")
+        print("[Printer] ✅ Документ успешно отправлен на печать!")
 
-class PrintPreview:
-    """Предпросмотр печати."""
+from .print_preview import PrintPreview
+from .printer import Printer
 
-    def generate_preview(self, doc: Document, settings: dict):
-        print(f"📄 Предпросмотр документа: {doc.name}")
-        doc.view_text()
+class PrintManager:
+    def show_preview(self, document):
+        return PrintPreview().generate_preview(document)
+
+    def print_document(self, document, settings):
+        Printer().send_to_print(document, settings)
+
 
 
 class PrintManager:
@@ -370,7 +389,13 @@ class PrintManager:
 
     def show_preview(self, doc: Document, settings: dict):
         self.preview.generate_preview(doc, settings)
-
+    def print_document(self, document, settings):
+        Printer().send_to_print(document, settings)
+        
+print("7 - [Печать] документа")
+# ...
+elif command == "7":
+    session.print_document()
 
 # ============================================================
 #                         CONTROLLER
