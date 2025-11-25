@@ -392,10 +392,7 @@ class PrintManager:
     def print_document(self, document, settings):
         Printer().send_to_print(document, settings)
         
-print("7 - [Печать] документа")
-# ...
-elif command == "7":
-    session.print_document()
+
 
 # ============================================================
 #                         CONTROLLER
