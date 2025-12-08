@@ -69,7 +69,7 @@ class SyntaxStrategy(IHighlightStrategy):
         self.color = color
 
     def check_and_apply(self, word: "WordComponent"):
-        if word.gettext() in self.keywords:
+        if word.gettext() in self.keywords or not self.keywords:
             word.set_color(self.color)
 
 
@@ -477,8 +477,9 @@ if __name__ == "__main__":
     session = Editor()
 
     highlighter_factory = HighlightStrategyFactory()
-    python_strategy = highlighter_factory.create_strategy(
-        strategy_name="Python Definition", keywords=['class', 'def'], color="green")
+    none_strategy = highlighter_factory.create_strategy(strategy_name="None", keywords=[], color="black")
+    highlighter_factory.add_strategy(none_strategy)
+    python_strategy = highlighter_factory.create_strategy(strategy_name="Python Definition", keywords=['class', 'def'], color="blue")
     highlighter_factory.add_strategy(python_strategy)
 
     print("Текстовый редактор запущен.")
