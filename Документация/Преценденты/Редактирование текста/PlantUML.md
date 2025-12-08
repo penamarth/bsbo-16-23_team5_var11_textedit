@@ -1,4 +1,4 @@
-![alt text](Диаграмма.jpg)
+![alt text](Диаграмма.png)
 @startuml
 title Обработка вставки текста
 
