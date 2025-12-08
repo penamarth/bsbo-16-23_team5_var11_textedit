@@ -1,4 +1,6 @@
 ![alt text](Диаграмма.png)
+
+```startuml
 @startuml
 title Обработка вставки текста
 
@@ -95,3 +97,4 @@ note over Document
 end note
 Document -> Document: add(List<Paragraph1, Paragraph2>)
 @enduml
+```
