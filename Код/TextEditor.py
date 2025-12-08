@@ -212,9 +212,20 @@ class Document(ParagraphComponent):
 
     def insert_text(self, text: str):
         """Вставляет текст в документ, разбивая его на абзацы."""
-        parts = text.split("<p>")
-        for part in parts:
-            if part.strip():
+        parts = text.split('<p>')
+        if parts[0] == '':
+            for part in parts[1:]:
+                para = ParagraphComponent()
+                para.add(part)
+                self.content.append(para)
+        elif not self.content:
+            for part in parts:
+                para = ParagraphComponent()
+                para.add(part)
+                self.content.append(para)
+        else:
+            self.content[-1].add(parts[0])
+            for part in parts[1:]:
                 para = ParagraphComponent()
                 para.add(part)
                 self.content.append(para)
