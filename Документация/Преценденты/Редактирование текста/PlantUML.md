@@ -10,10 +10,10 @@ participant ParagraphComponent
 participant SentenceComponent
 participant WordComponent
 
-Editor -> Document: insertText("\\nПривет, мир! У вас очень красиво! \\nЯ обязательно вернусь.")
+Editor -> Document: insertText("<p>Привет, мир! У вас очень красиво! <p>Я обязательно вернусь.")
 
 note over Document
-  Обработка первого \\n
+  Обработка первого <p>
   - создание абзаца
 end note
 Document -> ParagraphComponent: new()
@@ -62,7 +62,7 @@ end note
 ParagraphComponent -> ParagraphComponent: add(List<sentence1, sentence2>)
 
 note over Document
-  Обработка второго \\n
+  Обработка второго <p>
   - создание абзаца
 end note
 Document -> ParagraphComponent: new()
@@ -96,5 +96,6 @@ note over Document
   Добавление компонентов
 end note
 Document -> Document: add(List<Paragraph1, Paragraph2>)
+Document -> Editor: void
 @enduml
 ```
